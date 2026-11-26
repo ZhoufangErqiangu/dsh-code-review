@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-code-review",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "type": "module",
   "description": "Adds /code-review to DeepSeek Harness: prepares a GitHub pull request and hands a structured review task to the current agent.",
@@ -38,7 +38,7 @@
     "clean": "rm -rf dist",
     "test": "npm run build && node --test \"dist/tests/*.test.js\"",
     "dry-run": "node dist/scripts/dry-run.js",
-    "push":"git pull && npm version --patch && git push && git push --tags"
+    "push": "git pull && npm version --patch && git push && git push --tags"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.1.0",
