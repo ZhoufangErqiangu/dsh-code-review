@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Code review",
+    "description": "Adds /code-review to any session: it reads a GitHub pull request's metadata, per-file patches, and complete files at the head commit, then hands the current agent a structured review task. Requires the gh CLI signed in. Review only: it never writes to the repository or to GitHub."
+  }
+}
