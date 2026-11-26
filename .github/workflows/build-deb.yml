@@ -1,12 +1,10 @@
 name: build-deb
 
 # Build the /code-review plugin as an architecture-independent Debian package,
-# verify its payload, install it on a clean Ubuntu runner, and attach it to a
-# GitHub release for v* tags.
+# verify its payload, and attach it to a GitHub release for v* tags. Pull
+# request tests run in ci.yml.
 #
-# The package installs files only: it never edits a user's DSH profile, so the
-# install test checks the layout, integrity, and (when a Harness is available)
-# bundle composition instead of starting a service.
+# The package installs files only: it never edits a user's DSH profile.
 
 on:
   push:
@@ -42,7 +40,7 @@ jobs:
       - name: Validate the dispatch input
         if: github.event_name == 'workflow_dispatch'
         env:
-          INPUT_DEB_REVISION: v0.0.0
+          INPUT_DEB_REVISION: ${{ github.event.inputs.deb_revision }}
         run: |
           revision="${INPUT_DEB_REVISION:-}"
           if [ -n "$revision" ] && ! printf '%s' "$revision" | grep -Eq '^[0-9A-Za-z][0-9A-Za-z.+~]*$'; then

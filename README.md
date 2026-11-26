@@ -38,7 +38,9 @@ The same directory works in **Plugins → Add plugin**. An upgrade replaces the 
 
 ### Continuous integration
 
-`.github/workflows/build-deb.yml` runs on pull requests and pushes to `main`: it runs the locked build and tests, requires the committed `dist/` to match a fresh compile, packages the deb, checks ownership and `md5sums`, and installs it on a clean Ubuntu runner to load the entry and remove it again. Pushing a `v<version>` tag that matches `package.json` runs the same checks and publishes the `.deb` and its `.sha256` to a GitHub Release. Set the repository variable `DSH_DEB_URL` to a `deepseek-harness` `.deb` to add the end-to-end profile-composition check to the install job.
+`.github/workflows/ci.yml` runs on pull requests into `main`: it installs the locked dependencies, typechecks, runs the unit tests, and requires the committed `dist/` to match a fresh compile.
+
+`.github/workflows/build-deb.yml` runs on `v<version>` tags that match `package.json`, and on manual dispatch: it builds and verifies the deb, then publishes the `.deb` and its `.sha256` to a GitHub Release.
 
 ## Use
 
@@ -134,7 +136,7 @@ When upgrading the Harness, update these devDependencies to the installed versio
 | `release.conf`, `Makefile` | Debian package identity and the `make deb` pipeline |
 | `scripts/` | Build, staging, packaging, and verification scripts |
 | `packaging/` | Debian `control`/`postinst` templates and package docs |
-| `.github/workflows/build-deb.yml` | CI: build, install test, and release |
+| `.github/workflows/` | `ci.yml` (PR tests) and `build-deb.yml` (tag release) |
 
 ## License
 
