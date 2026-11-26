@@ -8,7 +8,7 @@ import { spawn } from 'node:child_process'
 
 import { buildReviewContext } from '../src/context.js'
 import { normalizeSettings } from '../src/config.js'
-import { buildReviewPrompt, resolveLanguage } from '../src/prompt.js'
+import { buildReviewStartPrompt, resolveLanguage } from '../src/prompt.js'
 import { parseSelector } from '../src/selectors.js'
 import type { Context, SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '../src/types.js'
 
@@ -72,8 +72,8 @@ try {
 
   console.log(result.indexMarkdown)
   console.log('\n--- prompt ---\n')
-  console.log(buildReviewPrompt({
-    meta: result.meta,
+  console.log(buildReviewStartPrompt({
+    target: input.trim(),
     language: resolveLanguage(settings.language, ctx),
     maxFindings: settings.maxFindings,
   }))

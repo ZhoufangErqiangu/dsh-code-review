@@ -1,5 +1,5 @@
 /** Language selection and the review task submitted to the agent. */
-import type { Context, Language, ResolvedLanguage, ReviewMeta } from './types.js';
+import type { Context, Language, ResolvedLanguage } from './types.js';
 /**
  * Resolve `language: auto` against the profile locale setting, then the host locale.
  * @param setting - configured language.
@@ -7,15 +7,9 @@ import type { Context, Language, ResolvedLanguage, ReviewMeta } from './types.js
  * @returns resolved language.
  */
 export declare function resolveLanguage(setting: Language, ctx: Context): ResolvedLanguage;
-/** Fields of the prepared context the prompt actually reads. */
-export interface ReviewPromptMeta {
-    repository: Pick<ReviewMeta['repository'], 'owner' | 'repo'>;
-    context: Pick<ReviewMeta['context'], 'directory'>;
-    pullRequest: Pick<ReviewMeta['pullRequest'], 'number' | 'title' | 'headSha' | 'draft'>;
-}
-/** Inputs for the review turn's user message. */
-export interface ReviewPromptInput {
-    meta: ReviewPromptMeta;
+/** Inputs for the review turn that starts before the context exists. */
+export interface ReviewStartPromptInput {
+    target: string;
     language: ResolvedLanguage;
     maxFindings: number;
 }
@@ -24,5 +18,5 @@ export interface ReviewPromptInput {
  * @param input - prompt inputs.
  * @returns the review task.
  */
-export declare function buildReviewPrompt({ meta, language, maxFindings }: ReviewPromptInput): string;
+export declare function buildReviewStartPrompt({ target, language, maxFindings }: ReviewStartPromptInput): string;
 //# sourceMappingURL=prompt.d.ts.map

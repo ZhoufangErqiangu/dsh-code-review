@@ -189,6 +189,7 @@ export interface ResolvedPullRequest extends RepositoryTarget {
  * only as devDependencies pinned to the Harness version used for the build.
  * ------------------------------------------------------------------------- */
 
+import type {} from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-working-directory'
 
 export type { Context } from '@deepseek-ai/cordis'
@@ -196,6 +197,7 @@ export type { CommandDefinition, CommandInvocation, CommandResult } from '@deeps
 export type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm'
 export type { SettingsDescriptor, SettingsForms } from '@deepseek-ai/dsh-settings'
 export type { SkillRegistration } from '@deepseek-ai/dsh-skill'
+export type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
 export type {
   SubprocessHandle,
   SubprocessOutcome,

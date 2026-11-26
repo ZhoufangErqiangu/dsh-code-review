@@ -186,6 +186,7 @@ export type { CommandDefinition, CommandInvocation, CommandResult } from '@deeps
 export type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm';
 export type { SettingsDescriptor, SettingsForms } from '@deepseek-ai/dsh-settings';
 export type { SkillRegistration } from '@deepseek-ai/dsh-skill';
+export type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools';
 export type { SubprocessHandle, SubprocessOutcome, SubprocessOutputReader, SubprocessSpawnSpec, } from '@deepseek-ai/dsh-subprocess';
 /** Removes a registration. */
 export type Disposer = () => void;

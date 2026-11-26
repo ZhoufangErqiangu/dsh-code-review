@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildReviewPrompt, resolveLanguage, type ReviewPromptMeta } from '../src/prompt.js'
+import { buildReviewStartPrompt, resolveLanguage } from '../src/prompt.js'
 import type { Context } from '../src/types.js'
 
 function contextWithLocale(preference: string): Context {
@@ -25,24 +25,25 @@ test('explicit language wins over the profile', () => {
   assert.equal(resolveLanguage('en', ctx), 'en')
 })
 
-test('the review prompt names the context, the head commit, and the rules', () => {
-  const meta = {
-    repository: { owner: 'o', repo: 'r' },
-    context: { directory: '.dsh/code-review/o-r-1-abcdef0' },
-    pullRequest: {
-      number: 1,
-      title: 'Fix the thing',
-      headSha: 'abcdef0123456789',
-      draft: false,
-    },
-  } satisfies ReviewPromptMeta
-  const prompt = buildReviewPrompt({ meta, language: 'en', maxFindings: 12 })
-  assert.match(prompt, /o\/r#1/)
-  assert.match(prompt, /abcdef0123456789/)
-  assert.match(prompt, /\.dsh\/code-review\/o-r-1-abcdef0/)
+test('the start prompt names the target, the preparation tool, and the rules', () => {
+  const prompt = buildReviewStartPrompt({
+    target: 'https://github.com/o/r/pull/1',
+    language: 'en',
+    maxFindings: 12,
+  })
+  assert.match(prompt, /https:\/\/github\.com\/o\/r\/pull\/1/)
+  assert.match(prompt, /prepare_code_review/)
   assert.match(prompt, /dsh-code-review/)
   assert.match(prompt, /untrusted data/)
   assert.match(prompt, /at most 12 findings/)
   assert.match(prompt, /English/)
   assert.match(prompt, /do not modify repository files/)
+  assert.match(prompt, /reports an error/)
+})
+
+test('an empty target asks for the current branch pull request', () => {
+  const prompt = buildReviewStartPrompt({ target: '', language: 'zh', maxFindings: 5 })
+  assert.match(prompt, /the current branch/)
+  assert.match(prompt, /target ""/)
+  assert.match(prompt, /Simplified Chinese/)
 })

@@ -1,7 +1,7 @@
 /**
- * `/code-review` — resolve a GitHub pull request, prepare its diff and complete
- * file text under the session workspace, and hand the current agent one
- * structured review task.
+ * `/code-review` — submit a review turn immediately; the `prepare_code_review`
+ * tool writes the pull request context under the session workspace, and the
+ * agent continues with the bundled review skill.
  * @module @local/dsh-code-review
  */
 import type { Context } from './src/types.js';

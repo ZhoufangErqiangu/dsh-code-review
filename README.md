@@ -1,6 +1,6 @@
 # Code review
 
-`/code-review` prepares a GitHub pull request and hands the current agent a structured review task. It is designed for the Web client, and works anywhere slash commands are available.
+`/code-review` starts a structured review of a GitHub pull request. The command returns immediately; the agent then calls the `prepare_code_review` tool, which fetches the context and hands the review back to the agent. It is designed for the Web client, and works anywhere slash commands are available.
 
 ## Requirements
 
@@ -24,7 +24,9 @@ The Harness loads the compiled entry `dist/index.js`. This workspace keeps a bui
 /code-review https://github.com/owner/repo/pull/123
 ```
 
-The command resolves the pull request, fetches its metadata, the patch of every changed file, and the complete text of those files at the head commit, writes that material under `.dsh/code-review/<owner>-<repo>-<pr>-<head>/`, and submits one review request to the current agent. The command row reports the pull request, the number of files, and the diff size; the review itself arrives as the agent's reply.
+The command validates the selector and submits one review turn, then returns. The agent calls `prepare_code_review`, which resolves the pull request, fetches its metadata, the patch of every changed file, and the complete text of those files at the head commit, and writes that material under `.dsh/code-review/<owner>-<repo>-<pr>-<head>/`. The tool result names the context directory and its `index.md`; the agent reads it, loads the `dsh-code-review` skill, and writes the review as its reply.
+
+The two-phase split is deliberate: the command itself does no network work, so the composer is released as soon as you submit, and the potentially slow GitHub reads appear as a normal tool card with visible progress. A preparation failure is a tool error, which the agent reports instead of inventing a review. `prepare_code_review` can also be called directly by the model without the command.
 
 The generated `index.md` lists every file with its patch and full text path, and records anything omitted because of limits. The agent can fetch a missing file read-only with `gh api` when it needs one.
 
@@ -80,7 +82,7 @@ npm run dry-run -- https://github.com/owner/repo/pull/123
 The DSH Host API is imported **type-only** from exact-version devDependencies, not hand-written:
 
 - `@deepseek-ai/cordis` `4.1.0`
-- `@deepseek-ai/dsh-agent`, `-commands`, `-llm`, `-settings`, `-skill`, `-subprocess`, `-working-directory` `0.2.2-rc.3`
+- `@deepseek-ai/dsh-agent`, `-commands`, `-llm`, `-settings`, `-skill`, `-subprocess`, `-tools`, `-working-directory` `0.2.2-rc.3`
 
 The versions are pinned because npm's `latest` tag for the DSH packages is stale (`0.0.1-rc.1`); installing without an explicit version would fetch an incompatible API. The compiled `dist/` has no `@deepseek-ai/*` import — verify with:
 
@@ -94,8 +96,9 @@ When upgrading the Harness, update these devDependencies to the installed versio
 
 | Path | Role |
 |---|---|
-| `index.ts` | Bundle entry: `apply()`, `inject`, command registration |
-| `src/command.ts` | `/code-review` handler |
+| `index.ts` | Bundle entry: `apply()`, `inject`, command/skill/tool registration |
+| `src/command.ts` | `/code-review` handler: validate and submit the turn immediately |
+| `src/tool.ts` | `prepare_code_review`: fetch and materialize the review context |
 | `src/context.ts` | Review context builder |
 | `src/pull-request.ts`, `src/gh.ts` | GitHub reads through `ctx.subprocess` |
 | `src/skill.ts` | Embedded `dsh-code-review` methodology |

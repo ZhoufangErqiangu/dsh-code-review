@@ -1,7 +1,8 @@
 /** The `/code-review` command handler. */
 import type { CommandInvocation, CommandResult, Context, Settings } from './types.js';
 /**
- * Prepare the review context and submit one review turn to the receiving agent.
+ * Submit one review turn immediately. The agent prepares the context with the
+ * `prepare_code_review` tool, so the composer is not held by network work.
  * @param ctx - plugin context.
  * @param settings - resolved settings.
  * @param invocation - command invocation.

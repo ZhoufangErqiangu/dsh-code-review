@@ -39,86 +39,74 @@ function invocationFor(agent, rawInput) {
         signal: new AbortController().signal,
     };
 }
-test('the plugin declares its services and registers one command and one skill', () => {
-    const commands = [];
-    const skills = [];
-    const ctx = {
+function fakeContext(cwd, registries) {
+    return {
         effect: (fn) => fn(),
         commands: {
             register: (definition) => {
-                commands.push(definition);
+                registries.commands.push(definition);
                 return () => { };
             },
         },
         skills: {
             register: (definition) => {
-                skills.push(definition);
+                registries.skills.push(definition);
                 return () => { };
             },
         },
+        tools: {
+            register: (definition) => {
+                registries.tools.push(definition);
+                return () => { };
+            },
+        },
+        workingDirectory: { ensure: async () => cwd },
+        subprocess: fakeSubprocess(),
+        get: () => undefined,
+        logger: { warn: () => { } },
     };
-    apply(ctx, {});
+}
+test('the plugin registers one command, one skill, and one preparation tool', () => {
+    const registries = { commands: [], skills: [], tools: [] };
+    apply(fakeContext('/tmp', registries), {});
     assert.equal(name, 'code-review');
-    assert.deepEqual(inject, ['commands', 'subprocess', 'workingDirectory', 'skills']);
-    assert.equal(commands.length, 1);
-    assert.equal(commands[0]?.name, 'code-review');
-    assert.equal(typeof commands[0]?.handler, 'function');
-    assert.equal(skills.length, 1);
-    const skill = skills[0];
+    assert.deepEqual(inject, ['commands', 'skills', 'subprocess', 'tools', 'workingDirectory']);
+    assert.equal(registries.commands.length, 1);
+    assert.equal(registries.commands[0]?.name, 'code-review');
+    assert.equal(typeof registries.commands[0]?.handler, 'function');
+    assert.equal(registries.skills.length, 1);
+    const skill = registries.skills[0];
     assert.ok(skill);
     assert.equal(skill.name, 'dsh-code-review');
     assert.equal(skill.invocation?.userInvocable, false);
     assert.match(skill.content, /## Budget/);
-    assert.match(skill.content, /Do not modify files/);
+    assert.match(skill.content, /prepare_code_review/);
+    assert.equal(registries.tools.length, 1);
+    assert.equal(registries.tools[0]?.name, 'prepare_code_review');
 });
-test('a malformed selector returns usage without reading GitHub', async () => {
-    const commands = [];
-    const ctx = {
-        effect: (fn) => fn(),
-        commands: {
-            register: (definition) => {
-                commands.push(definition);
-                return () => { };
-            },
-        },
-        skills: { register: () => () => { } },
-    };
-    apply(ctx, {});
-    const command = commands[0];
+test('a malformed selector returns usage without submitting a turn', async () => {
+    const registries = { commands: [], skills: [], tools: [] };
+    apply(fakeContext('/tmp', registries), {});
+    const command = registries.commands[0];
     assert.ok(command);
     const result = await command.handler(invocationFor(fakeAgent(() => { throw new Error('must not submit'); }), 'not a pull request'));
     if (result.kind !== 'error')
         assert.fail('expected an error result');
     assert.match(result.text, /Usage: \/code-review/);
 });
-test('the command prepares the context and submits one review turn', async (t) => {
+test('the command submits the review turn immediately', async (t) => {
     const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'dsh-code-review-command-'));
     t.after(() => fs.rm(cwd, { recursive: true, force: true }));
-    const commands = [];
+    const registries = { commands: [], skills: [], tools: [] };
     const followed = [];
-    const ctx = {
-        effect: (fn) => fn(),
-        commands: {
-            register: (definition) => {
-                commands.push(definition);
-                return () => { };
-            },
-        },
-        skills: { register: () => () => { } },
-        workingDirectory: { ensure: async () => cwd },
-        subprocess: fakeSubprocess(),
-        get: () => undefined,
-        logger: { warn: () => { } },
-    };
-    apply(ctx, { retentionDays: 0 });
-    const command = commands[0];
+    apply(fakeContext(cwd, registries), { retentionDays: 0 });
+    const command = registries.commands[0];
     assert.ok(command);
     const agent = fakeAgent(message => followed.push(message));
     const result = await command.handler(invocationFor(agent, 'o/r#7'));
     if (result.kind !== 'success')
         assert.fail('expected a success result');
-    assert.match(result.text ?? '', /Reviewing o\/r#7/);
-    assert.match(result.text ?? '', /1 files, \+1 -1/);
+    assert.match(result.text ?? '', /Preparing the review for o\/r#7/);
     const message = followed[0];
     assert.ok(message);
     assert.equal(message.role, 'user');
@@ -128,11 +116,37 @@ test('the command prepares the context and submits one review turn', async (t) =
     assert.ok(block);
     if (block.type !== 'text')
         assert.fail('expected a text block');
-    assert.match(block.text, /head1234567890/);
+    assert.match(block.text, /prepare_code_review/);
+    assert.match(block.text, /"o\/r#7"/);
     assert.match(block.text, /dsh-code-review/);
-    assert.match(block.text, /\.dsh\/code-review\/o-r-7-head123/);
-    const index = await fs.readFile(path.join(cwd, '.dsh', 'code-review', 'o-r-7-head123', 'index.md'), 'utf8');
+    // The command must not do the network work itself, so it creates no context.
+    await assert.rejects(fs.access(path.join(cwd, '.dsh')));
+});
+test('the preparation tool writes the context and returns its index path', async (t) => {
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'dsh-code-review-tool-'));
+    t.after(() => fs.rm(cwd, { recursive: true, force: true }));
+    const registries = { commands: [], skills: [], tools: [] };
+    apply(fakeContext(cwd, registries), { retentionDays: 0 });
+    const tool = registries.tools[0];
+    assert.ok(tool);
+    const exec = {
+        agent: fakeAgent(() => { }),
+        signal: new AbortController().signal,
+    };
+    const value = await tool.execute({ target: 'o/r#7' }, exec);
+    assert.equal(value.directory, '.dsh/code-review/o-r-7-head123');
+    assert.equal(value.indexPath, '.dsh/code-review/o-r-7-head123/index.md');
+    assert.equal(value.owner, 'o');
+    assert.equal(value.repo, 'r');
+    assert.equal(value.number, 7);
+    assert.equal(value.title, 'Add a value');
+    assert.equal(value.headSha, 'head1234567890');
+    assert.equal(value.filesChanged, 1);
+    assert.equal(value.filesIncluded, 1);
+    assert.equal(value.filesTruncated, false);
+    const index = await fs.readFile(path.join(cwd, value.indexPath), 'utf8');
     assert.match(index, /src\/a\.ts/);
+    await assert.rejects(tool.execute({}, exec), /requires a "target" string/);
 });
 function fakeSubprocess() {
     return {
