@@ -25,15 +25,18 @@ version="$(dpkg-query -W -f='${Version}' "$PKG")"
 pass "$PKG $version is installed"
 
 for file in \
-  package.json cordis.patch.yml README.md LICENSE icon.svg \
+  package.json cordis.patch.yml README.md LICENSE icon.svg client.js \
   locale/en.json locale/zh.json \
   dist/index.js dist/index.d.ts \
-  dist/src/command.js dist/src/tool.js dist/scripts/dry-run.js; do
+  dist/src/command.js dist/src/tool.js dist/scripts/dry-run.js \
+  node_modules/@deepseek-ai/schemastery/package.json \
+  node_modules/@deepseek-ai/cosmokit/package.json; do
   [ -f "$DIR/$file" ] || fail "missing $DIR/$file"
 done
 [ ! -e "$DIR/dist/tests" ] || fail "compiled tests were installed"
-[ ! -e "$DIR/node_modules" ] || fail "node_modules was installed"
 [ ! -e "$DIR/src" ] || fail "TypeScript sources were installed"
+grep -q "'@local/dsh-code-review'" "$DIR/client.js" || fail "client.js does not register the package module"
+grep -q "plugins.row.config" "$DIR/client.js" || fail "client.js does not register the row settings card"
 [ -f "$DOC/LICENSE" ] || fail "missing $DOC/LICENSE"
 [ -f "$DOC/README.Debian.gz" ] || fail "missing $DOC/README.Debian.gz"
 [ -f "$DOC/BUILD-INFO.json" ] || fail "missing $DOC/BUILD-INFO.json"
@@ -72,8 +75,9 @@ node --input-type=module -e '
   if (mod.name !== "code-review") throw new Error(`name is ${String(mod.name)}`)
   if (typeof mod.apply !== "function") throw new Error("apply is not exported")
   if (!Array.isArray(mod.inject) || !mod.inject.includes("commands")) throw new Error("inject is not the Host contract")
+  if (typeof mod.Config !== "function" || typeof mod.Config.toJSON !== "function") throw new Error("Config is not a schemastery schema")
 ' "$DIR/dist/index.js" || fail "the installed entry does not load"
-pass "installed entry loads with Node $(node -p 'process.versions.node')"
+pass "installed entry loads with Node $(node -p 'process.versions.node') and resolves its schema dependency"
 
 # Optional end-to-end composition: the installed package root is linked into a
 # temporary profile exactly as `dsh plugin add` would, without running pnpm.

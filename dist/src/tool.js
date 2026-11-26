@@ -9,10 +9,11 @@ export const PREPARE_TOOL_NAME = 'prepare_code_review';
  * immediately and asks the agent to call this tool, so the composer is
  * released before the network work starts and progress appears as a tool card.
  * @param ctx - plugin context.
- * @param settings - resolved settings.
+ * @param currentSettings - reads the configuration for one invocation, so a
+ * live settings write applies without restarting the plugin.
  * @returns the tool definition.
  */
-export function createPrepareReviewTool(ctx, settings) {
+export function createPrepareReviewTool(ctx, currentSettings) {
     return {
         name: PREPARE_TOOL_NAME,
         description: 'Prepare a pull-request review context: resolve the pull request, fetch per-file patches and complete files at the head commit, and write them under .dsh/code-review. '
@@ -72,7 +73,7 @@ export function createPrepareReviewTool(ctx, settings) {
             try {
                 const context = await buildReviewContext({
                     ctx,
-                    settings,
+                    settings: currentSettings(),
                     selector,
                     cwd,
                     signal: exec.signal,

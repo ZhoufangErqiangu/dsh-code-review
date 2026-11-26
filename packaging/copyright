@@ -22,3 +22,15 @@ License: MIT
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
+
+Files: usr/lib/dsh/plugins/code-review/node_modules/@deepseek-ai/schemastery/*
+Copyright: 2021-present Shigma
+License: MIT
+
+Files: usr/lib/dsh/plugins/code-review/node_modules/@deepseek-ai/cosmokit/*
+Copyright: 2021-present Shigma
+License: MIT
+
+Comment: schemastery builds the plugin's Config schema and is staged inside the
+ installed package root with its cosmokit runtime dependency. Both are copied
+ unmodified from their npm packages, which include the full MIT license text.

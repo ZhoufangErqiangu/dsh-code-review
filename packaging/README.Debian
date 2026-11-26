@@ -7,9 +7,10 @@ What this package installs
   /usr/share/doc/dsh-code-review/     this note, copyright, changelog,
                                       BUILD-INFO.json
 
-The package root contains package.json, cordis.patch.yml, dist/, locale/, and
-icon.svg. That directory is the unit DeepSeek Harness installs: the Web
-Plugins page ("Add plugin") and `dsh plugin add <path>` both read it.
+The package root contains package.json, cordis.patch.yml, dist/, client.js,
+locale/, icon.svg, and a private node_modules/ with the pinned schemastery
+schema dependency. That directory is the unit DeepSeek Harness installs: the
+Web Plugins page ("Add plugin") and `dsh plugin add <path>` both read it.
 
 The package does not modify user profiles and does not start a service. It
 also does not install `gh`, Node.js, or DeepSeek Harness itself; it Depends on
@@ -64,6 +65,12 @@ After enabling and restarting:
 
 The command returns immediately and the review runs in a background subagent.
 `gh auth login` must be completed for the user running the Host.
+
+On the Web client, open Plugins and select Code review. The settings card
+on the package page edits the report language, finding limit, and context
+budgets; the same form is also on the `code-review` row. The card saves through the Harness settings
+service and applies to the next review without restarting the Host. The remaining
+deployment limits stay in the profile's cordis.patch.yml.
 
 License
 -------

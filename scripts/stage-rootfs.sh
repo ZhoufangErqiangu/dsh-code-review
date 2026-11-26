@@ -26,8 +26,20 @@ install -m 0644 \
   "$ROOT/README.md" \
   "$ROOT/LICENSE" \
   "$ROOT/icon.svg" \
+  "$ROOT/client.js" \
   "$pkg/"
 install -m 0644 "$ROOT"/locale/*.json "$pkg/locale/"
+
+# The Web settings card needs a real Config schema. schemastery is the one
+# runtime dependency; its own dependency, cosmokit, is staged too so the linked
+# package resolves both from inside the installed package root.
+log "staging the runtime schema dependency"
+install -d "$pkg/node_modules/@deepseek-ai"
+for dependency in schemastery cosmokit; do
+  source="$ROOT/node_modules/@deepseek-ai/$dependency"
+  [ -d "$source" ] || die "missing runtime dependency: $source (run npm ci)"
+  cp -a "$source" "$pkg/node_modules/@deepseek-ai/$dependency"
+done
 
 # Ship exactly the runtime the published package exposes: the entry, its
 # declarations and source maps, src/, and the dry-run helper. Compiled tests

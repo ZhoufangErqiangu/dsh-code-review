@@ -1,6 +1,6 @@
 # Code review
 
-`/code-review` starts a structured review of a GitHub pull request in a **background subagent**. The command returns immediately; the main agent delegates the review, the child prepares the context with `prepare_code_review` and reviews in its own context, and the main session only relays the report. It is designed for the Web client, and works anywhere slash commands are available.
+`/code-review` starts a structured review of a GitHub pull request in a **background subagent**. The command returns immediately; the main agent delegates the review, the child prepares the context with `prepare_code_review` and reviews in its own context, and the main session only relays the report. It is designed for the Web client, and works anywhere slash commands are available. On the Web client, the plugin's page in **Plugins** carries a settings card for the report language, finding limit, and context budgets.
 
 ## Requirements
 
@@ -12,7 +12,7 @@
 
 ## Install
 
-Open **Plugins** and add the **package root** with **Add plugin** — the directory containing `package.json` and `cordis.patch.yml`. For this checkout that is the repository root, **not** `dist/`: the dialog reads `<path>/package.json` and then the bundle patch, so `dist/` alone is not a valid plugin package. Enabling the bundle inserts one Host row, `code-review`; no Client bundle is required.
+Open **Plugins** and add the **package root** with **Add plugin** — the directory containing `package.json` and `cordis.patch.yml`. For this checkout that is the repository root, **not** `dist/`: the dialog reads `<path>/package.json` and then the bundle patch, so `dist/` alone is not a valid plugin package. Enabling the bundle inserts one Host row, `code-review`, and loads the package's small hand-written Client bundle for the settings card.
 
 The Harness loads the compiled entry `dist/index.js`. This workspace keeps a built `dist/`, so a local install works without a build step. After editing `src/`, run `npm run build` before reinstalling or reloading.
 
@@ -25,7 +25,7 @@ make deb
 sudo apt install ./dist/dsh-code-review_*_all.deb
 ```
 
-The package depends on `deepseek-harness (>= 0.2.2~rc.3)` and recommends `gh` and `git`. It installs the plugin package root under `/usr/lib/dsh/plugins/code-review` and notes under `/usr/share/doc/dsh-code-review`; it never edits a user profile and installs no service. Enable it per user, then let the profile reload:
+The package depends on `deepseek-harness (>= 0.2.2~rc.3)` and recommends `gh` and `git`. It installs the plugin package root under `/usr/lib/dsh/plugins/code-review` (including its pinned `schemastery` schema dependency) and notes under `/usr/share/doc/dsh-code-review`; it never edits a user profile and installs no service. Enable it per user, then let the profile reload:
 
 ```sh
 dsh plugin --profile web add /usr/lib/dsh/plugins/code-review
@@ -67,18 +67,23 @@ A project skill named `dsh-code-review` under `.dsh/skills` or `.agents/skills` 
 
 ## Configuration
 
-The row accepts these fields in `cordis.patch.yml`:
+The five fields people change most are editable in the Web UI: open **Plugins** and select **Code review**. The settings card is on the package page; the same form is also on the `code-review` row. It saves through the Harness settings service, so a change is validated by the Host and applies to the next review without restarting the plugin. An overridden field carries a badge and can be reset to the deployed default. The same five fields are accepted in the row's `config` in `cordis.patch.yml`:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `language` | `auto` | Report language: `auto`, `zh`, or `en` |
+| `maxFindings` | `15` | Findings the reviewer may report |
+| `maxFiles` | `200` | Maximum changed files fetched into the context |
+| `maxPatchBytes` | `262144` | Per-file patch cap; a longer patch is truncated with a marker |
+| `retentionDays` | `7` | Old review context directories are pruned after this many days |
+
+The remaining fields are deployment limits and stay in `cordis.patch.yml`; they are validated at activation and changing one reloads the plugin:
 
 | Field | Default | Meaning |
 |---|---|---|
 | `ghCommand` | `gh` | Executable used for GitHub reads |
-| `maxFiles` | `200` | Maximum changed files fetched into the context |
-| `maxPatchBytes` | `262144` | Per-file patch cap; a longer patch is truncated with a marker |
 | `maxFileBytes` | `131072` | Per-file complete-text cap; larger files keep only their patch |
 | `maxTotalFileBytes` | `8388608` | Total complete-text budget across the context |
-| `maxFindings` | `15` | Findings the reviewer may report |
-| `language` | `auto` | Report language: `auto`, `zh`, or `en` |
-| `retentionDays` | `7` | Old review context directories are pruned after this many days |
 | `requestTimeoutMs` | `30000` | Deadline for one `gh` invocation |
 | `concurrency` | `4` | Concurrent file fetches |
 
@@ -92,7 +97,7 @@ The row accepts these fields in `cordis.patch.yml`:
 
 ## Development
 
-The plugin, tests, and scripts are TypeScript. `tsc` compiles them to `dist/`, which is the package entry the Harness loads; Node does not strip types for files under `node_modules`, so the compiled JavaScript is required.
+The Host plugin, tests, and scripts are TypeScript; `tsc` compiles them to `dist/`, which is the package entry the Harness loads; Node does not strip types for files under `node_modules`, so the compiled JavaScript is required. The browser half is the hand-written `client.js`, which the Harness serves as-is; it needs no client build step.
 
 ```sh
 npm install
@@ -108,24 +113,27 @@ make verify          # re-run the package checks
 
 ### Types
 
-The DSH Host API is imported **type-only** from exact-version devDependencies, not hand-written:
+The DSH Host API is imported **type-only** from exact-version devDependencies, not hand-written, with one runtime exception: [`@deepseek-ai/schemastery`](https://www.npmjs.com/package/@deepseek-ai/schemastery) builds the row's `Config` schema at runtime. The `.deb` stages it, with its `cosmokit` dependency, inside the installed package root; an npm install resolves it as a normal dependency. Every other DSH package is build-only:
 
 - `@deepseek-ai/cordis` `4.1.0`
+- `@deepseek-ai/schemastery` `3.19.0` (runtime)
 - `@deepseek-ai/dsh-agent`, `-commands`, `-llm`, `-settings`, `-skill`, `-subprocess`, `-tools`, `-working-directory` `0.2.2-rc.3`
 
-The versions are pinned because npm's `latest` tag for the DSH packages is stale (`0.0.1-rc.1`); installing without an explicit version would fetch an incompatible API. The compiled `dist/` has no `@deepseek-ai/*` import — verify with:
+The versions are pinned because npm's `latest` tag for the DSH packages is stale (`0.0.1-rc.1`); installing without an explicit version would fetch an incompatible API. Apart from `schemastery`, the compiled `dist/` has no `@deepseek-ai/*` import — verify with:
 
 ```sh
-grep -rE "from ['\"]@deepseek-ai|import ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" dist --include=*.js
+! grep -rE "from ['\"]@deepseek-ai|import ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" dist --include=*.js \
+  | grep -q -v '@deepseek-ai/schemastery'
 ```
 
-When upgrading the Harness, update these devDependencies to the installed version and rebuild. Domain types (`Settings`, `ReviewMeta`, `ContextEntry`, and so on) remain local because they describe this plugin's own files, not a DSH contract.
+When upgrading the Harness, update these devDependencies (and the `schemastery` runtime dependency) to the installed versions and rebuild. Domain types (`Settings`, `ReviewMeta`, `ContextEntry`, and so on) remain local because they describe this plugin's own files, not a DSH contract.
 
 ### Layout
 
 | Path | Role |
 |---|---|
-| `index.ts` | Bundle entry: `apply()`, `inject`, command/skill/tool registration |
+| `index.ts` | Bundle entry: `apply()`, `inject`, `Config`, command/skill/tool registration |
+| `client.js` | Browser half: the settings card on the plugin and row pages |
 | `src/command.ts` | `/code-review` handler: validate and submit the delegation turn immediately |
 | `src/tool.ts` | `prepare_code_review`: fetch and materialize the review context for the child |
 | `src/context.ts` | Review context builder |

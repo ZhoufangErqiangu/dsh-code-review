@@ -42,16 +42,18 @@ root="$BUILD/verify/root"
 pkg="$root$PLUGIN_INSTALL_DIR"
 
 for file in \
-  package.json cordis.patch.yml README.md LICENSE icon.svg \
+  package.json cordis.patch.yml README.md LICENSE icon.svg client.js \
   locale/en.json locale/zh.json \
   dist/index.js dist/index.d.ts dist/index.js.map \
   dist/src/command.js dist/src/tool.js dist/src/skill.js \
-  dist/scripts/dry-run.js; do
+  dist/scripts/dry-run.js \
+  node_modules/@deepseek-ai/schemastery/package.json \
+  node_modules/@deepseek-ai/cosmokit/package.json; do
   [ -f "$pkg/$file" ] || fail "payload is missing $PLUGIN_INSTALL_DIR/$file"
 done
 [ ! -e "$pkg/dist/tests" ] || fail "compiled tests must not be packaged"
 [ ! -e "$pkg/src" ] || fail "TypeScript sources must not be packaged"
-[ ! -e "$pkg/node_modules" ] || fail "node_modules must not be packaged"
+[ -f "$pkg/node_modules/@deepseek-ai/schemastery/lib/index.mjs" ] || fail "schemastery runtime entry is missing"
 [ ! -e "$pkg/package-lock.json" ] || fail "package-lock.json must not be packaged"
 [ -f "$root/usr/share/doc/$DEB_PACKAGE/copyright" ] || fail "copyright is missing"
 [ -f "$root/usr/share/doc/$DEB_PACKAGE/LICENSE" ] || fail "LICENSE is missing"
@@ -94,12 +96,16 @@ if (pkg.version !== process.env.PLUGIN_VERSION) fail(`version is ${pkg.version},
 if (pkg.main !== './dist/index.js') fail(`main is ${pkg.main}`)
 if (pkg.exports?.['.']?.default !== './dist/index.js') fail('exports["."].default does not point at dist/index.js')
 if (pkg.dsh?.bundle?.patch !== './cordis.patch.yml') fail('dsh.bundle.patch does not point at cordis.patch.yml')
+if (pkg.exports?.['./client'] !== './client.js') fail('exports["./client"] does not point at client.js')
+if (pkg.dsh?.client?.platform !== 'web') fail('dsh.client.platform is not web')
+if (!Array.isArray(pkg.dsh?.client?.inject)) fail('dsh.client.inject is not a list')
+if (pkg.dependencies?.['@deepseek-ai/schemastery'] !== '3.19.0') fail('schemastery is not a pinned runtime dependency')
 if (pkg.license !== 'MIT') fail(`license is ${pkg.license}, expected MIT`)
-for (const file of ['dist/index.js', 'dist/index.d.ts', 'cordis.patch.yml', 'LICENSE', 'locale/en.json', 'locale/zh.json', 'icon.svg']) {
+for (const file of ['dist/index.js', 'dist/index.d.ts', 'client.js', 'cordis.patch.yml', 'LICENSE', 'locale/en.json', 'locale/zh.json', 'icon.svg']) {
   if (!fs.existsSync(path.join(dir, file))) fail(`missing ${file}`)
 }
 EOF
-pass "package.json identity, entry points, and bundle patch"
+pass "package.json identity, entry points, client manifest, and bundle patch"
 
 grep -Eq "id:[[:space:]]*code-review" "$pkg/cordis.patch.yml" \
   || fail "cordis.patch.yml does not insert the code-review row"
@@ -107,13 +113,14 @@ grep -Eq "name:[[:space:]]*'?$PLUGIN_NAME'?" "$pkg/cordis.patch.yml" \
   || fail "cordis.patch.yml does not name $PLUGIN_NAME"
 pass "bundle patch inserts the code-review row for $PLUGIN_NAME"
 
-if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$pkg/dist" --include='*.js' >/dev/null; then
-  fail "compiled output imports @deepseek-ai at runtime"
+if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$pkg/dist" --include='*.js' \
+    | grep -v "@deepseek-ai/schemastery" >/dev/null; then
+  fail "compiled output imports an unexpected @deepseek-ai package at runtime"
 fi
 if grep -rIl -F "$ROOT" "$pkg" >/dev/null 2>&1; then
   fail "payload embeds the build directory path ($ROOT)"
 fi
-pass "no Host runtime imports and no build-path leakage"
+pass "only the declared schema dependency at runtime, and no build-path leakage"
 
 "$NODE" --input-type=module -e '
   import { pathToFileURL } from "node:url"
@@ -124,8 +131,11 @@ pass "no Host runtime imports and no build-path leakage"
   if (!Array.isArray(mod.inject) || !mod.inject.includes("commands") || !mod.inject.includes("tools")) {
     throw new Error(`unexpected inject: ${JSON.stringify(mod.inject)}`)
   }
+  if (typeof mod.Config !== "function" || typeof mod.Config.toJSON !== "function") {
+    throw new Error("Config is not a schemastery schema")
+  }
 ' "$pkg/dist/index.js" || fail "the compiled entry does not load"
-pass "compiled entry loads and exports name/apply/inject"
+pass "compiled entry loads, exports name/apply/inject/Config, and resolves its schema dependency"
 
 dpkg-deb --control "$deb" "$BUILD/verify/control"
 sh -n "$BUILD/verify/control/postinst" || fail "postinst has a syntax error"

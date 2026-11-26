@@ -20,17 +20,30 @@ const LANGUAGES = new Set(['auto', 'zh', 'en']);
 export function normalizeSettings(raw) {
     const input = isRecord(raw) ? raw : {};
     return {
-        ghCommand: stringValue(input.ghCommand, 'ghCommand', 'gh'),
-        maxFiles: integerValue(input.maxFiles, 'maxFiles', 200, 1, 2000),
-        maxPatchBytes: integerValue(input.maxPatchBytes, 'maxPatchBytes', 256 * 1024, 1024, 16 * 1024 * 1024),
-        maxFileBytes: integerValue(input.maxFileBytes, 'maxFileBytes', 128 * 1024, 1024, 4 * 1024 * 1024),
-        maxTotalFileBytes: integerValue(input.maxTotalFileBytes, 'maxTotalFileBytes', 8 * 1024 * 1024, 1024, 64 * 1024 * 1024),
-        maxFindings: integerValue(input.maxFindings, 'maxFindings', 15, 1, 100),
-        language: languageValue(input.language),
-        retentionDays: integerValue(input.retentionDays, 'retentionDays', 7, 0, 365),
-        requestTimeoutMs: integerValue(input.requestTimeoutMs, 'requestTimeoutMs', 30_000, 1000, 300_000),
-        concurrency: integerValue(input.concurrency, 'concurrency', 4, 1, 16),
+        ghCommand: stringValue(unwrap(input.ghCommand), 'ghCommand', 'gh'),
+        maxFiles: integerValue(unwrap(input.maxFiles), 'maxFiles', 200, 1, 2000),
+        maxPatchBytes: integerValue(unwrap(input.maxPatchBytes), 'maxPatchBytes', 256 * 1024, 1024, 16 * 1024 * 1024),
+        maxFileBytes: integerValue(unwrap(input.maxFileBytes), 'maxFileBytes', 128 * 1024, 1024, 4 * 1024 * 1024),
+        maxTotalFileBytes: integerValue(unwrap(input.maxTotalFileBytes), 'maxTotalFileBytes', 8 * 1024 * 1024, 1024, 64 * 1024 * 1024),
+        maxFindings: integerValue(unwrap(input.maxFindings), 'maxFindings', 15, 1, 100),
+        language: languageValue(unwrap(input.language)),
+        retentionDays: integerValue(unwrap(input.retentionDays), 'retentionDays', 7, 0, 365),
+        requestTimeoutMs: integerValue(unwrap(input.requestTimeoutMs), 'requestTimeoutMs', 30_000, 1000, 300_000),
+        concurrency: integerValue(unwrap(input.concurrency), 'concurrency', 4, 1, 16),
     };
+}
+/**
+ * Read one Config field. Volatile fields reach `apply` as stable references
+ * whose value the Loader commits in place, so every read unwraps them; fields
+ * declared without `.volatile()` arrive as plain values.
+ * @param value - raw or volatile Config field.
+ * @returns the current plain value.
+ */
+function unwrap(value) {
+    if (typeof value === 'object' && value !== null && typeof value.get === 'function') {
+        return value.get();
+    }
+    return value;
 }
 function isRecord(value) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);

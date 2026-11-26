@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "代码审查",
-    "description": "为每个会话增加 /code-review 命令：读取 GitHub PR 的元数据、逐文件 patch 以及 head commit 上的完整文件，再把结构化的审查任务交给当前 agent。需要已登录的 gh CLI；只做审查，不会修改仓库或 GitHub。"
+    "description": "为每个会话增加 /code-review 命令：读取 GitHub PR 的元数据、逐文件 patch 以及 head commit 上的完整文件，再把结构化的审查任务交给当前 agent。需要已登录的 gh CLI；只做审查，不会修改仓库或 GitHub。插件页中该插件的页面带有设置卡片，可调整报告语言、问题数量和上下文预算。"
   }
 }

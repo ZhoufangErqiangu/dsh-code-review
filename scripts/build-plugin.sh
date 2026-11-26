@@ -30,12 +30,16 @@ npm test
 [ -f "$ROOT/dist/index.js" ] || die "the build did not produce dist/index.js"
 [ -f "$ROOT/dist/index.d.ts" ] || die "the build did not produce dist/index.d.ts"
 
-# The Host API is imported type-only. A runtime import would make the package
-# depend on how the Host resolves its own node_modules, which differs between
-# an npm install, a source checkout, and the Desktop ASAR.
-log "checking that the compiled entry has no Host runtime imports"
-if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$ROOT/dist" --include='*.js'; then
-  die "compiled output imports @deepseek-ai at runtime"
+# The Host API is imported type-only, with one exception: the Web settings
+# card needs a real Config schema, so @deepseek-ai/schemastery is a runtime
+# dependency. The package declares it, an npm install provides it, and the
+# .deb stages it beside the plugin. Every other Host import would make the
+# package depend on how the Host resolves its own node_modules, which differs
+# between an npm install, a source checkout, and the Desktop ASAR.
+log "checking that the compiled entry has no Host runtime imports besides schemastery"
+if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$ROOT/dist" --include='*.js' \
+    | grep -v "'@deepseek-ai/schemastery'\|\"@deepseek-ai/schemastery\""; then
+  die "compiled output imports an unexpected @deepseek-ai package at runtime"
 fi
 
 log "${C_GREEN}build complete${C_RESET}: plugin $PLUGIN_VERSION, Node $("$NODE" -p 'process.versions.node')"

@@ -18,6 +18,9 @@ Description: /code-review command for DeepSeek Harness
  per-file patches, and complete files at the head commit, then reports
  evidence-backed findings.
  .
+ On the Web client, the plugin's page in Plugins carries a settings card for
+ the report language, finding limit, and context budgets.
+ .
  Installs the plugin package root under @PLUGIN_INSTALL_DIR@.
  It does not modify any user profile. Enable it for a profile with:
  .
