@@ -106,7 +106,7 @@ test('the command submits the review turn immediately', async (t) => {
     const result = await command.handler(invocationFor(agent, 'o/r#7'));
     if (result.kind !== 'success')
         assert.fail('expected a success result');
-    assert.match(result.text ?? '', /Preparing the review for o\/r#7/);
+    assert.match(result.text ?? '', /Starting the review for o\/r#7 in a background subagent/);
     const message = followed[0];
     assert.ok(message);
     assert.equal(message.role, 'user');
@@ -116,6 +116,7 @@ test('the command submits the review turn immediately', async (t) => {
     assert.ok(block);
     if (block.type !== 'text')
         assert.fail('expected a text block');
+    assert.match(block.text, /`subagent` tool/);
     assert.match(block.text, /prepare_code_review/);
     assert.match(block.text, /"o\/r#7"/);
     assert.match(block.text, /dsh-code-review/);

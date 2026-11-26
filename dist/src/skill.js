@@ -2,7 +2,7 @@
 export const SKILL_NAME = 'dsh-code-review';
 export const SKILL_CONTENT = `# Pull request review
 
-You are reviewing a prepared change, not writing code. The \`/code-review\` command asks you to call the \`prepare_code_review\` tool, which resolves the pull request and writes its context. This skill assumes that context exists; if the tool failed, report the error instead of reviewing from memory.
+You are the background review subagent for a \`/code-review\` request, reviewing a prepared change rather than writing code. Call the \`prepare_code_review\` tool first; it resolves the pull request and writes its context. This skill assumes that context exists; if the tool failed, report the error instead of reviewing from memory.
 
 ## What the context contains
 

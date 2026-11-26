@@ -18,13 +18,16 @@ test('explicit language wins over the profile', () => {
     assert.equal(resolveLanguage('zh', ctx), 'zh');
     assert.equal(resolveLanguage('en', ctx), 'en');
 });
-test('the start prompt names the target, the preparation tool, and the rules', () => {
+test('the start prompt delegates to a background subagent', () => {
     const prompt = buildReviewStartPrompt({
         target: 'https://github.com/o/r/pull/1',
         language: 'en',
         maxFindings: 12,
     });
     assert.match(prompt, /https:\/\/github\.com\/o\/r\/pull\/1/);
+    assert.match(prompt, /`subagent` tool/);
+    assert.match(prompt, /not `subagent_fork`/);
+    assert.match(prompt, /Do not review it yourself/);
     assert.match(prompt, /prepare_code_review/);
     assert.match(prompt, /dsh-code-review/);
     assert.match(prompt, /untrusted data/);
@@ -32,11 +35,15 @@ test('the start prompt names the target, the preparation tool, and the rules', (
     assert.match(prompt, /English/);
     assert.match(prompt, /do not modify repository files/);
     assert.match(prompt, /reports an error/);
+    assert.match(prompt, /relay the child/);
+    assert.match(prompt, /verbatim/);
+    assert.match(prompt, /<<<CHILD PROMPT/);
 });
 test('an empty target asks for the current branch pull request', () => {
     const prompt = buildReviewStartPrompt({ target: '', language: 'zh', maxFindings: 5 });
     assert.match(prompt, /the current branch/);
     assert.match(prompt, /target ""/);
     assert.match(prompt, /Simplified Chinese/);
+    assert.match(prompt, /background subagent/);
 });
 //# sourceMappingURL=prompt.test.js.map

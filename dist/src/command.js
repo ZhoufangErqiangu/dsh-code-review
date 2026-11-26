@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import { ReviewError, messageOf } from './errors.js';
 import { buildReviewStartPrompt, resolveLanguage } from './prompt.js';
 import { parseSelector, USAGE } from './selectors.js';
-import { PREPARE_TOOL_NAME } from './tool.js';
 /**
  * Submit one review turn immediately. The agent prepares the context with the
  * `prepare_code_review` tool, so the composer is not held by network work.
@@ -51,8 +50,8 @@ function deepFreeze(value) {
 function notice(target) {
     const subject = target === '' ? 'the current branch pull request' : target;
     return [
-        `Preparing the review for ${subject}.`,
-        `The agent will call ${PREPARE_TOOL_NAME} and continue in this session.`,
+        `Starting the review for ${subject} in a background subagent.`,
+        'The report will appear here when it completes.',
     ].join('\n');
 }
 function failure(ctx, signal, error) {
