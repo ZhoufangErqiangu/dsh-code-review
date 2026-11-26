@@ -16,6 +16,30 @@ Open **Plugins** and add the **package root** with **Add plugin** — the direct
 
 The Harness loads the compiled entry `dist/index.js`. This workspace keeps a built `dist/`, so a local install works without a build step. After editing `src/`, run `npm run build` before reinstalling or reloading.
 
+### Debian package
+
+`make deb` builds and verifies an architecture-independent package:
+
+```sh
+make deb
+sudo apt install ./dist/dsh-code-review_*_all.deb
+```
+
+The package depends on `deepseek-harness (>= 0.2.2~rc.3)` and recommends `gh` and `git`. It installs the plugin package root under `/usr/lib/dsh/plugins/code-review` and notes under `/usr/share/doc/dsh-code-review`; it never edits a user profile and installs no service. Enable it per user, then let the profile reload:
+
+```sh
+dsh plugin --profile web add /usr/lib/dsh/plugins/code-review
+systemctl --user restart dsh-web     # only if the profile does not reload live
+```
+
+The same directory works in **Plugins → Add plugin**. An upgrade replaces the directory in place, so the profile link stays valid; restart the Host to load the new code. Remove the bundle (`dsh plugin --profile web remove @local/dsh-code-review`) before `apt remove dsh-code-review`.
+
+`release.conf` holds the package identity, the apt revision, the `deepseek-harness` floor, and the install path; `make print-config` prints the resolved values. `make DEB_REVISION=alex1 deb` rebuilds with a different revision. The payload is `Architecture: all` because the plugin is pure JavaScript.
+
+### Continuous integration
+
+`.github/workflows/build-deb.yml` runs on pull requests and pushes to `main`: it runs the locked build and tests, requires the committed `dist/` to match a fresh compile, packages the deb, checks ownership and `md5sums`, and installs it on a clean Ubuntu runner to load the entry and remove it again. Pushing a `v<version>` tag that matches `package.json` runs the same checks and publishes the `.deb` and its `.sha256` to a GitHub Release. Set the repository variable `DSH_DEB_URL` to a `deepseek-harness` `.deb` to add the end-to-end profile-composition check to the install job.
+
 ## Use
 
 ```text
@@ -74,6 +98,8 @@ npm run build        # tsc -> dist/
 npm test             # build, then node --test on dist/tests
 npm run typecheck    # tsc --noEmit
 npm run dry-run -- https://github.com/owner/repo/pull/123
+make deb             # build and verify the Debian package
+make verify          # re-run the package checks
 ```
 
 `dry-run` builds the review context with a local `gh` runner and prints the prompt instead of starting an agent turn. It is the fastest way to check selector parsing, GitHub access, and context budgets before installing.
@@ -105,3 +131,11 @@ When upgrading the Harness, update these devDependencies to the installed versio
 | `src/skill.ts` | Embedded `dsh-code-review` methodology |
 | `src/types.ts` | Domain value types and type-only re-exports of the DSH Host API |
 | `tests/` | `node:test` suites, compiled to `dist/tests` |
+| `release.conf`, `Makefile` | Debian package identity and the `make deb` pipeline |
+| `scripts/` | Build, staging, packaging, and verification scripts |
+| `packaging/` | Debian `control`/`postinst` templates and package docs |
+| `.github/workflows/build-deb.yml` | CI: build, install test, and release |
+
+## License
+
+MIT — see [LICENSE](LICENSE).

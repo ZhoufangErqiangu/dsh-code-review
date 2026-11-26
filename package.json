@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Adds /code-review to DeepSeek Harness: prepares a GitHub pull request and hands a structured review task to the current agent.",
+  "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -23,7 +24,8 @@
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "dsh": {
     "bundle": {

@@ -1,0 +1,30 @@
+Package: @PACKAGE@
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: @MAINTAINER@
+Installed-Size: @INSTALLED_SIZE@
+Depends: @DSH_PACKAGE@ (>= @DSH_MIN_VERSION@)
+Recommends: gh, git
+Section: devel
+Priority: optional
+Homepage: @PLUGIN_REPO_URL@
+X-DSH-Plugin-Name: @PLUGIN_NAME@
+X-DSH-Plugin-Version: @PLUGIN_VERSION@
+X-DSH-Plugin-Commit: @PLUGIN_COMMIT@
+Description: /code-review command for DeepSeek Harness
+ Adds the /code-review slash command and the prepare_code_review tool to
+ DeepSeek Harness. The command starts a structured review of a GitHub pull
+ request in a background subagent: the child reads the pull request metadata,
+ per-file patches, and complete files at the head commit, then reports
+ evidence-backed findings.
+ .
+ Installs the plugin package root under @PLUGIN_INSTALL_DIR@.
+ It does not modify any user profile. Enable it for a profile with:
+ .
+   dsh plugin --profile @PROFILE@ add @PLUGIN_INSTALL_DIR@
+ .
+ or add the same directory on the Plugins page in the Web UI.
+ .
+ Reviewing a pull request needs the GitHub CLI (gh) signed in. The plugin is
+ architecture-independent JavaScript and runs inside the Harness Host process
+ with the profile user's privileges.

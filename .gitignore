@@ -1,4 +1,9 @@
 # dist/ is committed on purpose: the Harness loads the compiled entry directly.
+# The packaged artifact and build scratch space are not.
+build/
+dist/*.deb
+dist/*.sha256
+dist/latest.txt
 node_modules/
 .dsh/
 *.log

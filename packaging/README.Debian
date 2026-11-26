@@ -1,0 +1,78 @@
+dsh-code-review — Debian/Ubuntu package notes
+=============================================
+
+What this package installs
+--------------------------
+  /usr/lib/dsh/plugins/code-review/   the plugin package root
+  /usr/share/doc/dsh-code-review/     this note, copyright, changelog,
+                                      BUILD-INFO.json
+
+The package root contains package.json, cordis.patch.yml, dist/, locale/, and
+icon.svg. That directory is the unit DeepSeek Harness installs: the Web
+Plugins page ("Add plugin") and `dsh plugin add <path>` both read it.
+
+The package does not modify user profiles and does not start a service. It
+also does not install `gh`, Node.js, or DeepSeek Harness itself; it Depends on
+deepseek-harness (>= @DSH_MIN_VERSION@) and Recommends the GitHub CLI.
+
+Enabling the plugin (per user, not with sudo)
+---------------------------------------------
+  dsh plugin --profile web add /usr/lib/dsh/plugins/code-review
+
+Or, in the Web UI: Plugins -> Add plugin -> enter
+/usr/lib/dsh/plugins/code-review.
+
+Installation enables the bundle in the profile. A running Host picks it up
+through HMR when the profile uses live reload; otherwise restart the Web UI:
+
+  systemctl --user restart dsh-web
+
+Do not run these commands with sudo: the profile belongs to the user, and
+root-owned files under ~/.dsh break the user service. A Host plugin runs
+in-process with that user's privileges and can read its credentials, so
+install only packages you trust.
+
+Upgrading
+---------
+`apt install` replaces the directory in place. The profile links to the
+directory, not to a version, so no reinstall is needed; restart the Web UI to
+load the new code (or let HMR reload it).
+
+Removing
+--------
+Remove the bundle from every profile that enabled it first:
+
+  dsh plugin --profile web remove @PLUGIN_NAME@
+
+Then remove the package:
+
+  sudo apt remove dsh-code-review
+
+Removing the package first leaves a dangling link in the profile. DeepSeek
+Harness then reports the bundle as skipped, and the `dsh plugin remove`
+command above still clears it. `apt purge` removes only the files listed in
+the package; no user data is touched.
+
+Usage
+-----
+After enabling and restarting:
+
+  /code-review                       review the open pull request of the branch
+  /code-review 123                   review PR #123 in the session repository
+  /code-review owner/repo#123        review #123 in another repository
+  /code-review https://github.com/owner/repo/pull/123
+
+The command returns immediately and the review runs in a background subagent.
+`gh auth login` must be completed for the user running the Host.
+
+License
+-------
+MIT. The full text is installed as /usr/share/doc/dsh-code-review/copyright
+and /usr/share/doc/dsh-code-review/LICENSE.
+
+Source
+------
+Upstream: @PLUGIN_REPO_URL@
+The exact version and commit used for this build are recorded in
+/usr/share/doc/dsh-code-review/BUILD-INFO.json and in the package's
+X-DSH-Plugin-Commit control field.
