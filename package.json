@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-code-review",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "description": "Adds /code-review to DeepSeek Harness: prepares a GitHub pull request and hands a structured review task to the current agent.",
