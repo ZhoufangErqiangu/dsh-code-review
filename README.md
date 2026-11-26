@@ -11,7 +11,7 @@
 
 ## Install
 
-Open **Plugins** and add this directory with **Add plugin**, or install the package directory with the DSH plugin manager. Enabling the bundle inserts one Host row, `code-review`; no Client bundle is required.
+Open **Plugins** and add the **package root** with **Add plugin** — the directory containing `package.json` and `cordis.patch.yml`. For this checkout that is the repository root, **not** `dist/`: the dialog reads `<path>/package.json` and then the bundle patch, so `dist/` alone is not a valid plugin package. Enabling the bundle inserts one Host row, `code-review`; no Client bundle is required.
 
 The Harness loads the compiled entry `dist/index.js`. This workspace keeps a built `dist/`, so a local install works without a build step. After editing `src/`, run `npm run build` before reinstalling or reloading.
 
