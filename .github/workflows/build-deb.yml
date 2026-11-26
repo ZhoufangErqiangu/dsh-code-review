@@ -10,15 +10,8 @@ name: build-deb
 
 on:
   push:
-    branches: [main]
     tags: ['v*']
-  pull_request:
   workflow_dispatch:
-    inputs:
-      deb_revision:
-        description: 'Debian revision appended to the package version, e.g. alex1'
-        required: false
-        type: string
 
 concurrency:
   group: build-deb-${{ github.ref }}
@@ -49,7 +42,7 @@ jobs:
       - name: Validate the dispatch input
         if: github.event_name == 'workflow_dispatch'
         env:
-          INPUT_DEB_REVISION: ${{ github.event.inputs.deb_revision }}
+          INPUT_DEB_REVISION: v0.0.0
         run: |
           revision="${INPUT_DEB_REVISION:-}"
           if [ -n "$revision" ] && ! printf '%s' "$revision" | grep -Eq '^[0-9A-Za-z][0-9A-Za-z.+~]*$'; then
