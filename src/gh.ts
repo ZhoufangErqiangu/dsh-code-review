@@ -1,7 +1,7 @@
 /** Read-only GitHub CLI access through the harness subprocess service. */
 
-import { ReviewError, messageOf } from './errors.js'
-import { asInteger, asRecord, asString } from './json.js'
+import { ReviewError, messageOf } from './errors.ts'
+import { asInteger, asRecord, asString } from './json.ts'
 import type {
   Context,
   RepositoryTarget,
@@ -9,7 +9,7 @@ import type {
   SubprocessHandle,
   SubprocessOutcome,
   SubprocessOutputReader,
-} from './types.js'
+} from './types.ts'
 
 const OUTPUT_LIMIT = 32 * 1024 * 1024
 const STDERR_LIMIT = 64 * 1024

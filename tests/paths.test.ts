@@ -9,7 +9,7 @@ import {
   patchBasename,
   safeRepositoryPath,
   scoreFile,
-} from '../src/paths.js'
+} from '../src/paths.ts'
 
 test('repository paths are accepted only when safe', () => {
   assert.equal(safeRepositoryPath('src/app.ts'), 'src/app.ts')

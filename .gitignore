@@ -1,9 +1,10 @@
-# dist/ is committed on purpose: the Harness loads the compiled entry directly.
-# The packaged artifact and build scratch space are not.
+# lib/ is build output: the .deb and any published npm package are built from
+# source and contain lib/, but a checkout generates it with `npm run build`.
+# dist/ holds only the packaged artifact; build/ is scratch.
+lib/
+dist/
 build/
-dist/*.deb
-dist/*.sha256
-dist/latest.txt
+.npm-cache/
 node_modules/
 .dsh/
 *.log

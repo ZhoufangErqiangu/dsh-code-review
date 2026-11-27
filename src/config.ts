@@ -1,6 +1,6 @@
 /** Validated settings for the code-review plugin. */
 
-import type { Language, Settings } from './types.js'
+import type { Language, Settings } from './types.ts'
 
 export const DEFAULT_SETTINGS = Object.freeze({
   ghCommand: 'gh',

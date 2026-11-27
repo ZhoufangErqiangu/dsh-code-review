@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { parseSelector } from '../src/selectors.js'
+import { parseSelector } from '../src/selectors.ts'
 
 test('empty input targets the current branch pull request', () => {
   assert.deepEqual(parseSelector(''), { kind: 'current' })

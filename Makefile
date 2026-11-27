@@ -2,11 +2,12 @@
 #
 #   make            build -> test -> stage -> package -> verify
 #   make deb        same as the default target
-#   make build      npm ci, typecheck, compile, run the unit tests
+#   make build      npm ci and bundle into lib/ (no tests)
+#   make test       typecheck and run the unit tests against lib/
 #   make stage      assemble build/rootfs from the compiled package
 #   make package    write dist/dsh-code-review_<version>-<rev>_all.deb
 #   make verify     structural checks and the module/composition smoke test
-#   make clean      remove build/ and the built .deb (keeps the committed dist/)
+#   make clean      remove build/ and the built .deb (keeps the generated lib/)
 #
 # Overrides for a one-off build:
 #   make DEB_REVISION=alex1 deb
@@ -37,12 +38,15 @@ export DSH_PACKAGE DSH_MIN_VERSION PLUGIN_NAME PLUGIN_INSTALL_DIR NODE_MIN
 
 .DEFAULT_GOAL := deb
 
-.PHONY: all deb build stage package verify check clean print-config
+.PHONY: all deb build test stage package verify check clean print-config
 
 all: deb
 
 build:
 	scripts/build-plugin.sh
+
+test: build
+	scripts/test-plugin.sh
 
 stage: build
 	scripts/stage-rootfs.sh
@@ -53,7 +57,7 @@ package: stage
 verify check: package
 	scripts/verify-deb.sh
 
-deb: verify
+deb: test verify
 	@printf '\nDebian package: %s\n' "$$(cat $(ROOT)/dist/latest.txt)"
 
 print-config:

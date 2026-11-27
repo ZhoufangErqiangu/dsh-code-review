@@ -1,9 +1,9 @@
 /** Pull request resolution and GitHub reads shared by the command. */
 
-import { ReviewError } from './errors.js'
-import { currentPullRequest, currentRepository, ghApi } from './gh.js'
-import { asArray, asBoolean, asInteger, asRecord, asString } from './json.js'
-import { encodeRepositoryPath, safeRepositoryPath } from './paths.js'
+import { ReviewError } from './errors.ts'
+import { currentPullRequest, currentRepository, ghApi } from './gh.ts'
+import { asArray, asBoolean, asInteger, asRecord, asString } from './json.ts'
+import { encodeRepositoryPath, safeRepositoryPath } from './paths.ts'
 import type {
   ChangedFile,
   ChangedFilesResult,
@@ -15,7 +15,7 @@ import type {
   ResolvedPullRequest,
   ReviewSelector,
   Settings,
-} from './types.js'
+} from './types.ts'
 
 /**
  * Resolve a parsed selector and read its open pull request.

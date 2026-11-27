@@ -20,7 +20,13 @@ interface ActiveRuntime {
   rerender: () => void
 }
 
-const source = await fs.readFile(new URL('../../client.js', import.meta.url), 'utf8')
+const bundle = new URL('../lib/client.js', import.meta.url)
+let source: string
+try {
+  source = await fs.readFile(bundle, 'utf8')
+} catch (error) {
+  throw new Error(`cannot read ${bundle.pathname}; run "npm run build" first`, { cause: error })
+}
 let activeRuntime: ActiveRuntime | undefined
 
 const reactStandIn = {

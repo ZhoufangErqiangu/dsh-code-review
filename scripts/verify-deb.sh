@@ -42,17 +42,16 @@ root="$BUILD/verify/root"
 pkg="$root$PLUGIN_INSTALL_DIR"
 
 for file in \
-  package.json cordis.patch.yml README.md LICENSE icon.svg client.js \
+  package.json cordis.patch.yml README.md LICENSE icon.svg \
   locale/en.json locale/zh.json \
-  dist/index.js dist/index.d.ts dist/index.js.map \
-  dist/src/command.js dist/src/tool.js dist/src/skill.js \
-  dist/scripts/dry-run.js \
+  lib/index.js lib/index.d.ts lib/client.js lib/client.js.map \
   node_modules/@deepseek-ai/schemastery/package.json \
   node_modules/@deepseek-ai/cosmokit/package.json; do
   [ -f "$pkg/$file" ] || fail "payload is missing $PLUGIN_INSTALL_DIR/$file"
 done
-[ ! -e "$pkg/dist/tests" ] || fail "compiled tests must not be packaged"
+[ ! -e "$pkg/dist" ] || fail "build output must live in lib/, not dist/"
 [ ! -e "$pkg/src" ] || fail "TypeScript sources must not be packaged"
+[ ! -e "$pkg/lib/tests" ] || fail "compiled tests must not be packaged"
 [ -f "$pkg/node_modules/@deepseek-ai/schemastery/lib/index.mjs" ] || fail "schemastery runtime entry is missing"
 [ ! -e "$pkg/package-lock.json" ] || fail "package-lock.json must not be packaged"
 [ -f "$root/usr/share/doc/$DEB_PACKAGE/copyright" ] || fail "copyright is missing"
@@ -93,15 +92,15 @@ const fail = message => { console.error(`package.json: ${message}`); process.exi
 const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'))
 if (pkg.name !== process.env.PLUGIN_NAME) fail(`name is ${pkg.name}, expected ${process.env.PLUGIN_NAME}`)
 if (pkg.version !== process.env.PLUGIN_VERSION) fail(`version is ${pkg.version}, expected ${process.env.PLUGIN_VERSION}`)
-if (pkg.main !== './dist/index.js') fail(`main is ${pkg.main}`)
-if (pkg.exports?.['.']?.default !== './dist/index.js') fail('exports["."].default does not point at dist/index.js')
+if (pkg.main !== 'lib/index.js') fail(`main is ${pkg.main}`)
+if (pkg.exports?.['.']?.default !== './lib/index.js') fail('exports["."].default does not point at lib/index.js')
 if (pkg.dsh?.bundle?.patch !== './cordis.patch.yml') fail('dsh.bundle.patch does not point at cordis.patch.yml')
-if (pkg.exports?.['./client'] !== './client.js') fail('exports["./client"] does not point at client.js')
+if (pkg.exports?.['./client'] !== './lib/client.js') fail('exports["./client"] does not point at lib/client.js')
 if (pkg.dsh?.client?.platform !== 'web') fail('dsh.client.platform is not web')
 if (!Array.isArray(pkg.dsh?.client?.inject)) fail('dsh.client.inject is not a list')
 if (pkg.dependencies?.['@deepseek-ai/schemastery'] !== '3.19.0') fail('schemastery is not a pinned runtime dependency')
 if (pkg.license !== 'MIT') fail(`license is ${pkg.license}, expected MIT`)
-for (const file of ['dist/index.js', 'dist/index.d.ts', 'client.js', 'cordis.patch.yml', 'LICENSE', 'locale/en.json', 'locale/zh.json', 'icon.svg']) {
+for (const file of ['lib/index.js', 'lib/index.d.ts', 'lib/client.js', 'cordis.patch.yml', 'LICENSE', 'locale/en.json', 'locale/zh.json', 'icon.svg']) {
   if (!fs.existsSync(path.join(dir, file))) fail(`missing ${file}`)
 }
 EOF
@@ -113,7 +112,7 @@ grep -Eq "name:[[:space:]]*'?$PLUGIN_NAME'?" "$pkg/cordis.patch.yml" \
   || fail "cordis.patch.yml does not name $PLUGIN_NAME"
 pass "bundle patch inserts the code-review row for $PLUGIN_NAME"
 
-if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$pkg/dist" --include='*.js' \
+if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$pkg/lib" --include='*.js' \
     | grep -v "@deepseek-ai/schemastery" >/dev/null; then
   fail "compiled output imports an unexpected @deepseek-ai package at runtime"
 fi
@@ -134,8 +133,16 @@ pass "only the declared schema dependency at runtime, and no build-path leakage"
   if (typeof mod.Config !== "function" || typeof mod.Config.toJSON !== "function") {
     throw new Error("Config is not a schemastery schema")
   }
-' "$pkg/dist/index.js" || fail "the compiled entry does not load"
+' "$pkg/lib/index.js" || fail "the compiled entry does not load"
 pass "compiled entry loads, exports name/apply/inject/Config, and resolves its schema dependency"
+
+grep -q "window.__ModuleLoader__.load" "$pkg/lib/client.js" \
+  || fail "lib/client.js does not register a module-loader factory"
+grep -q "@local/dsh-code-review" "$pkg/lib/client.js" \
+  || fail "lib/client.js does not register the package module"
+grep -q "plugins.row.config" "$pkg/lib/client.js" \
+  || fail "lib/client.js does not register the row settings card"
+pass "client bundle registers the package module and the row settings card"
 
 dpkg-deb --control "$deb" "$BUILD/verify/control"
 sh -n "$BUILD/verify/control/postinst" || fail "postinst has a syntax error"

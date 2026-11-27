@@ -2,7 +2,7 @@
 
 import path from 'node:path'
 
-import type { ChangedFile } from './types.js'
+import type { ChangedFile } from './types.ts'
 
 const SOURCE_EXTENSIONS: ReadonlySet<string> = new Set([
   '.c', '.cc', '.cpp', '.cs', '.dart', '.ex', '.exs', '.go', '.graphql', '.h', '.hpp', '.hs', '.java',

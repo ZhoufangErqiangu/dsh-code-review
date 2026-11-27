@@ -3,13 +3,14 @@ dsh-code-review — Debian/Ubuntu package notes
 
 What this package installs
 --------------------------
-  /usr/lib/dsh/plugins/code-review/   the plugin package root
+  /usr/lib/dsh/plugins/code-review/   the plugin package root (lib/)
   /usr/share/doc/dsh-code-review/     this note, copyright, changelog,
                                       BUILD-INFO.json
 
-The package root contains package.json, cordis.patch.yml, dist/, client.js,
-locale/, icon.svg, and a private node_modules/ with the pinned schemastery
-schema dependency. That directory is the unit DeepSeek Harness installs: the
+The package root contains package.json, cordis.patch.yml, and lib/ (the
+compiled Host entry, its declarations, and the browser bundle), plus locale/,
+icon.svg, and a private node_modules/ with the pinned schemastery schema
+dependency. That directory is the unit DeepSeek Harness installs: the
 Web Plugins page ("Add plugin") and `dsh plugin add <path>` both read it.
 
 The package does not modify user profiles and does not start a service. It

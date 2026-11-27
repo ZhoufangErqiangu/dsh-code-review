@@ -4,8 +4,8 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { buildReviewContext, type GitHubReads } from '../src/context.js'
-import { DEFAULT_SETTINGS } from '../src/config.js'
+import { buildReviewContext, type GitHubReads } from '../src/context.ts'
+import { DEFAULT_SETTINGS } from '../src/config.ts'
 import type {
   ChangedFile,
   Context,
@@ -13,7 +13,7 @@ import type {
   ReviewMeta,
   ReviewSelector,
   Settings,
-} from '../src/types.js'
+} from '../src/types.ts'
 
 const PULL_REQUEST: PullRequestInfo = {
   number: 7,

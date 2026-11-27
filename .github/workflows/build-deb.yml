@@ -67,17 +67,6 @@ jobs:
           if [ -n "${RESOLVED_DEB_REVISION:-}" ]; then args+=("DEB_REVISION=${RESOLVED_DEB_REVISION}"); fi
           make "${args[@]}"
 
-      # The Harness loads the committed dist/ directly. A build that produces a
-      # different tree means the committed output is stale.
-      - name: Require the committed dist to match the build
-        run: |
-          if [ -n "$(git status --porcelain -- dist)" ]; then
-            git status --porcelain -- dist
-            git diff -- dist
-            echo "::error::dist/ is out of date; run 'npm run build' and commit the result"
-            exit 1
-          fi
-
       - name: Show package metadata and verify the digest
         run: |
           cat build/BUILD-INFO.json

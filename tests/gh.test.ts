@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { ghFailure, isNotARepositoryMessage, pullRequestTargetFromUrl, repositoryFromUrl } from '../src/gh.js'
+import { ghFailure, isNotARepositoryMessage, pullRequestTargetFromUrl, repositoryFromUrl } from '../src/gh.ts'
 
 test('pull request URLs parse with optional subpaths', () => {
   assert.deepEqual(pullRequestTargetFromUrl('https://github.com/o/r/pull/3'), {

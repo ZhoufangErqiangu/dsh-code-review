@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Install locked dependencies, then typecheck, compile, and test the plugin.
+# Install locked dependencies and bundle the plugin into lib/.
 #
-# The build is what the .deb ships, so it always starts from `npm ci` rather
-# than trusting an existing node_modules. dist/ is committed on purpose: the
-# Harness loads the compiled entry directly, and CI compares the regenerated
-# tree with the committed one.
+# Building is deliberately separate from testing and packaging: this step only
+# produces lib/, and `scripts/test-plugin.sh` consumes that output. The build is
+# what the .deb ships, so it always starts from `npm ci` rather than trusting an
+# existing node_modules. lib/ is generated, git-ignored build output: CI and the
+# .deb pipeline run this step, and no compiled tree is committed.
 
 set -euo pipefail
 # shellcheck source=common.sh
@@ -21,14 +22,12 @@ cd "$ROOT"
 log "installing locked dependencies (npm ci)"
 npm ci --no-audit --no-fund
 
-log "typechecking"
-npm run typecheck
+log "bundling into lib/"
+npm run build
 
-log "building and running the unit tests"
-npm test
-
-[ -f "$ROOT/dist/index.js" ] || die "the build did not produce dist/index.js"
-[ -f "$ROOT/dist/index.d.ts" ] || die "the build did not produce dist/index.d.ts"
+[ -f "$ROOT/lib/index.js" ] || die "the build did not produce lib/index.js"
+[ -f "$ROOT/lib/index.d.ts" ] || die "the build did not produce lib/index.d.ts"
+[ -f "$ROOT/lib/client.js" ] || die "the build did not produce lib/client.js"
 
 # The Host API is imported type-only, with one exception: the Web settings
 # card needs a real Config schema, so @deepseek-ai/schemastery is a runtime
@@ -37,7 +36,7 @@ npm test
 # package depend on how the Host resolves its own node_modules, which differs
 # between an npm install, a source checkout, and the Desktop ASAR.
 log "checking that the compiled entry has no Host runtime imports besides schemastery"
-if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$ROOT/dist" --include='*.js' \
+if grep -rE "from ['\"]@deepseek-ai|require\(['\"]@deepseek-ai" "$ROOT/lib" --include='*.js' \
     | grep -v "'@deepseek-ai/schemastery'\|\"@deepseek-ai/schemastery\""; then
   die "compiled output imports an unexpected @deepseek-ai package at runtime"
 fi

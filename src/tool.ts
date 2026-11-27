@@ -1,10 +1,10 @@
 /** The agent-facing tool that prepares the review context. */
 
-import { buildReviewContext } from './context.js'
-import { ReviewError } from './errors.js'
-import { asRecord, asString } from './json.js'
-import { USAGE, parseSelector } from './selectors.js'
-import type { Context, Settings, ToolDefinition } from './types.js'
+import { buildReviewContext } from './context.ts'
+import { ReviewError } from './errors.ts'
+import { asRecord, asString } from './json.ts'
+import { USAGE, parseSelector } from './selectors.ts'
+import type { Context, Settings, ToolDefinition } from './types.ts'
 
 export const PREPARE_TOOL_NAME = 'prepare_code_review'
 

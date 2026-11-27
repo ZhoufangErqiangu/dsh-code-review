@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildReviewStartPrompt, resolveLanguage } from '../src/prompt.js'
-import type { Context } from '../src/types.js'
+import { buildReviewStartPrompt, resolveLanguage } from '../src/prompt.ts'
+import type { Context } from '../src/types.ts'
 
 function contextWithLocale(preference: string): Context {
   return {

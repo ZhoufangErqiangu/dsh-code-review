@@ -25,18 +25,18 @@ version="$(dpkg-query -W -f='${Version}' "$PKG")"
 pass "$PKG $version is installed"
 
 for file in \
-  package.json cordis.patch.yml README.md LICENSE icon.svg client.js \
+  package.json cordis.patch.yml README.md LICENSE icon.svg \
   locale/en.json locale/zh.json \
-  dist/index.js dist/index.d.ts \
-  dist/src/command.js dist/src/tool.js dist/scripts/dry-run.js \
+  lib/index.js lib/index.d.ts lib/client.js lib/client.js.map \
   node_modules/@deepseek-ai/schemastery/package.json \
   node_modules/@deepseek-ai/cosmokit/package.json; do
   [ -f "$DIR/$file" ] || fail "missing $DIR/$file"
 done
-[ ! -e "$DIR/dist/tests" ] || fail "compiled tests were installed"
+[ ! -e "$DIR/dist" ] || fail "build output must live in lib/, not dist/"
 [ ! -e "$DIR/src" ] || fail "TypeScript sources were installed"
-grep -q "'@local/dsh-code-review'" "$DIR/client.js" || fail "client.js does not register the package module"
-grep -q "plugins.row.config" "$DIR/client.js" || fail "client.js does not register the row settings card"
+grep -q "window.__ModuleLoader__.load" "$DIR/lib/client.js" || fail "lib/client.js does not register a module-loader factory"
+grep -q "@local/dsh-code-review" "$DIR/lib/client.js" || fail "lib/client.js does not register the package module"
+grep -q "plugins.row.config" "$DIR/lib/client.js" || fail "lib/client.js does not register the row settings card"
 [ -f "$DOC/LICENSE" ] || fail "missing $DOC/LICENSE"
 [ -f "$DOC/README.Debian.gz" ] || fail "missing $DOC/README.Debian.gz"
 [ -f "$DOC/BUILD-INFO.json" ] || fail "missing $DOC/BUILD-INFO.json"
@@ -44,7 +44,7 @@ pass "installed layout ($DIR + documentation)"
 
 owner="$(stat -c '%U:%G' "$DIR/package.json")"
 [ "$owner" = "root:root" ] || fail "package files are owned by $owner, expected root:root"
-for path in "$DIR" "$DIR/dist" "$DIR/dist/index.js" "$DOC" "$DOC/BUILD-INFO.json"; do
+for path in "$DIR" "$DIR/lib" "$DIR/lib/index.js" "$DOC" "$DOC/BUILD-INFO.json"; do
   owner="$(stat -c '%U:%G' "$path")"
   [ "$owner" = "root:root" ] || fail "$path is owned by $owner, expected root:root"
 done
@@ -76,7 +76,7 @@ node --input-type=module -e '
   if (typeof mod.apply !== "function") throw new Error("apply is not exported")
   if (!Array.isArray(mod.inject) || !mod.inject.includes("commands")) throw new Error("inject is not the Host contract")
   if (typeof mod.Config !== "function" || typeof mod.Config.toJSON !== "function") throw new Error("Config is not a schemastery schema")
-' "$DIR/dist/index.js" || fail "the installed entry does not load"
+' "$DIR/lib/index.js" || fail "the installed entry does not load"
 pass "installed entry loads with Node $(node -p 'process.versions.node') and resolves its schema dependency"
 
 # Optional end-to-end composition: the installed package root is linked into a

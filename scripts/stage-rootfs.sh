@@ -10,14 +10,14 @@ set -euo pipefail
 init_version
 NODE="$(node_bin)"
 [ -n "$NODE" ] || die "Node.js is required to stage the package"
-[ -f "$ROOT/dist/index.js" ] || die "dist/ is not built; run scripts/build-plugin.sh first"
+[ -f "$ROOT/lib/index.js" ] || die "lib/ is not built; run scripts/build-plugin.sh first"
 
 rootfs="$BUILD/rootfs"
 pkg="$rootfs$PLUGIN_INSTALL_DIR"
 doc="$rootfs/usr/share/doc/$DEB_PACKAGE"
 
 rm -rf "$rootfs"
-install -d "$pkg/dist" "$pkg/locale" "$doc" "$rootfs/DEBIAN"
+install -d "$pkg/lib" "$pkg/locale" "$doc" "$rootfs/DEBIAN"
 
 log "staging the plugin package root under $PLUGIN_INSTALL_DIR"
 install -m 0644 \
@@ -26,7 +26,6 @@ install -m 0644 \
   "$ROOT/README.md" \
   "$ROOT/LICENSE" \
   "$ROOT/icon.svg" \
-  "$ROOT/client.js" \
   "$pkg/"
 install -m 0644 "$ROOT"/locale/*.json "$pkg/locale/"
 
@@ -41,15 +40,10 @@ for dependency in schemastery cosmokit; do
   cp -a "$source" "$pkg/node_modules/@deepseek-ai/$dependency"
 done
 
-# Ship exactly the runtime the published package exposes: the entry, its
-# declarations and source maps, src/, and the dry-run helper. Compiled tests
-# and the TypeScript sources stay in the repository.
-for file in index.js index.d.ts index.js.map index.d.ts.map; do
-  [ -f "$ROOT/dist/$file" ] || die "missing build output: dist/$file"
-  install -m 0644 "$ROOT/dist/$file" "$pkg/dist/$file"
-done
-cp -a "$ROOT/dist/src" "$pkg/dist/src"
-cp -a "$ROOT/dist/scripts" "$pkg/dist/scripts"
+# Ship exactly the runtime the published package exposes: the Host bundle and
+# its declarations, plus the browser bundle and its source map. TypeScript
+# sources, tests, and build tooling stay in the repository.
+cp -a "$ROOT/lib/." "$pkg/lib/"
 
 log "staging documentation"
 install -m 0644 "$ROOT/packaging/copyright" "$doc/copyright"
@@ -78,7 +72,7 @@ const info = {
     name: process.env.PLUGIN_NAME,
     version: process.env.PLUGIN_VERSION,
     installPath: process.env.PLUGIN_INSTALL_DIR,
-    entry: 'dist/index.js',
+    entry: 'lib/index.js',
     bundlePatch: 'cordis.patch.yml',
   },
   source: {

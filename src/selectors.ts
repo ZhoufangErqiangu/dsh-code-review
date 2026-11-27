@@ -1,6 +1,6 @@
 /** Parsing of the `/code-review` argument into a pull request target. */
 
-import type { ReviewSelector } from './types.js'
+import type { ReviewSelector } from './types.ts'
 
 export const USAGE = 'Usage: /code-review [number | owner/repo#number | https://github.com/owner/repo/pull/number]'
 

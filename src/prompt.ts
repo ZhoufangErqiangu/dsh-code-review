@@ -1,6 +1,6 @@
 /** Language selection and the delegation task submitted to the main agent. */
 
-import type { Context, Language, ResolvedLanguage, SettingsForms } from './types.js'
+import type { Context, Language, ResolvedLanguage, SettingsForms } from './types.ts'
 
 /**
  * Resolve `language: auto` against the profile locale setting, then the host locale.

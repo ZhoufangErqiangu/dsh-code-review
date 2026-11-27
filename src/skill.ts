@@ -1,6 +1,6 @@
 /** The model-facing review methodology registered as an embedded skill. */
 
-import type { Context, Disposer, SkillRegistration } from './types.js'
+import type { Context, Disposer, SkillRegistration } from './types.ts'
 
 export const SKILL_NAME = 'dsh-code-review'
 

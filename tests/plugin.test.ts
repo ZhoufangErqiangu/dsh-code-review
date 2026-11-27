@@ -7,7 +7,7 @@ import path from 'node:path'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { CommandId } from '@deepseek-ai/dsh-commands'
 
-import { apply, inject, name } from '../index.js'
+import { apply, inject, name } from '../src/index.ts'
 import type {
   CommandDefinition,
   CommandInvocation,
@@ -18,7 +18,7 @@ import type {
   ToolDefinition,
   ToolRunContext,
   UserMessage,
-} from '../src/types.js'
+} from '../src/types.ts'
 
 const PULL_REQUEST = {
   number: 7,

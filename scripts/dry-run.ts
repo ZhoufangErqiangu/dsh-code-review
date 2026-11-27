@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
  * Build one real review context with the local `gh` CLI and print the prompt.
- * Usage: node dist/scripts/dry-run.js <pull request URL | owner/repo#number | number>
+ * Usage: node scripts/dry-run.ts <pull request URL | owner/repo#number | number>
  */
 
 import { spawn } from 'node:child_process'
 
-import { buildReviewContext } from '../src/context.js'
-import { normalizeSettings } from '../src/config.js'
-import { buildReviewStartPrompt, resolveLanguage } from '../src/prompt.js'
-import { parseSelector } from '../src/selectors.js'
-import type { Context, SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '../src/types.js'
+import { buildReviewContext } from '../src/context.ts'
+import { normalizeSettings } from '../src/config.ts'
+import { buildReviewStartPrompt, resolveLanguage } from '../src/prompt.ts'
+import { parseSelector } from '../src/selectors.ts'
+import type { Context, SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '../src/types.ts'
 
 const input = process.argv[2]
 if (input === undefined || input.trim() === '') {
-  console.error('Usage: node dist/scripts/dry-run.js <pull request URL | owner/repo#number | number>')
+  console.error('Usage: node scripts/dry-run.ts <pull request URL | owner/repo#number | number>')
   process.exit(2)
 }
 

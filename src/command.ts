@@ -2,9 +2,9 @@
 
 import { randomUUID } from 'node:crypto'
 
-import { ReviewError, messageOf } from './errors.js'
-import { buildReviewStartPrompt, resolveLanguage } from './prompt.js'
-import { parseSelector, USAGE } from './selectors.js'
+import { ReviewError, messageOf } from './errors.ts'
+import { buildReviewStartPrompt, resolveLanguage } from './prompt.ts'
+import { parseSelector, USAGE } from './selectors.ts'
 import type {
   CommandInvocation,
   CommandResult,
@@ -12,7 +12,7 @@ import type {
   MessageId,
   Settings,
   UserMessage,
-} from './types.js'
+} from './types.ts'
 
 /**
  * Submit one review turn immediately. The agent prepares the context with the

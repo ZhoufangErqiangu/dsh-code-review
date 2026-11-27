@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { Config } from '../index.js'
-import { DEFAULT_SETTINGS, normalizeSettings } from '../src/config.js'
+import { Config } from '../src/index.ts'
+import { DEFAULT_SETTINGS, normalizeSettings } from '../src/config.ts'
 
 test('missing configuration keeps every default', () => {
   assert.deepEqual(normalizeSettings(undefined), DEFAULT_SETTINGS)

@@ -3,8 +3,8 @@ name: ci
 # Fast test gate for pull requests into main.
 #
 # Packaging and release checks live in build-deb.yml, which runs on v* tags and
-# manual dispatch. This workflow only proves the change compiles, passes the
-# unit tests, and leaves the committed dist/ in sync.
+# manual dispatch. This workflow only builds the plugin, typechecks, and runs
+# the unit tests.
 
 on:
   pull_request:
@@ -35,19 +35,12 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Build lib/
+        run: npm run build
+
       - name: Typecheck
         run: npm run typecheck
 
       - name: Run tests
         run: npm test
 
-      # The Harness loads the committed dist/ directly, so a test run that
-      # changes it means the pull request forgot to commit the build output.
-      - name: Require the committed dist to match the build
-        run: |
-          if [ -n "$(git status --porcelain -- dist)" ]; then
-            git status --porcelain -- dist
-            git diff -- dist
-            echo "::error::dist/ is out of date; run 'npm run build' and commit the result"
-            exit 1
-          fi

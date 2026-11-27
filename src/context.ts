@@ -4,9 +4,9 @@ import type { Dirent } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import { ReviewError } from './errors.js'
-import { fetchChangedFiles, fetchCommits, fetchFileText, resolvePullRequest } from './pull-request.js'
-import { isProbablyText, padIndex, patchBasename, safeRepositoryPath, scoreFile } from './paths.js'
+import { ReviewError } from './errors.ts'
+import { fetchChangedFiles, fetchCommits, fetchFileText, resolvePullRequest } from './pull-request.ts'
+import { isProbablyText, padIndex, patchBasename, safeRepositoryPath, scoreFile } from './paths.ts'
 import type {
   ChangedFile,
   ChangedFilesResult,
@@ -20,7 +20,7 @@ import type {
   ReviewMeta,
   ReviewSelector,
   Settings,
-} from './types.js'
+} from './types.ts'
 
 const CONTEXT_ROOT = path.posix.join('.dsh', 'code-review')
 const MARKER = '.code-review-context'

@@ -12,11 +12,11 @@
 
 import z from '@deepseek-ai/schemastery'
 
-import { runReviewCommand } from './src/command.js'
-import { DEFAULT_SETTINGS, normalizeSettings } from './src/config.js'
-import { registerReviewSkill } from './src/skill.js'
-import { createPrepareReviewTool } from './src/tool.js'
-import type { Context } from './src/types.js'
+import { runReviewCommand } from './command.ts'
+import { DEFAULT_SETTINGS, normalizeSettings } from './config.ts'
+import { registerReviewSkill } from './skill.ts'
+import { createPrepareReviewTool } from './tool.ts'
+import type { Context } from './types.ts'
 
 export const name = 'code-review'
 export const inject = ['commands', 'skills', 'subprocess', 'tools', 'workingDirectory']
